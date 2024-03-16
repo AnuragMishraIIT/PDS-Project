@@ -22,18 +22,11 @@ const unsigned char sbox[16][16] = // Tushar Jawane
         {0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16}  // f
 };
 
-const unsigned char roundconstants[11][4] = // Anurag Mishra
+const unsigned char roundconstants[11] = // Anurag Mishra
     {
-        {0x00, 0x00, 0x00, 0x00}, // For pre round transformation
-        {0x02, 0x00, 0x00, 0x00},
-        {0x04, 0x00, 0x00, 0x00},
-        {0x08, 0x00, 0x00, 0x00},
-        {0x10, 0x00, 0x00, 0x00},
-        {0x20, 0x00, 0x00, 0x00},
-        {0x40, 0x00, 0x00, 0x00},
-        {0x80, 0x00, 0x00, 0x00},
-        {0x1B, 0x00, 0x00, 0x00},
-        {0x36, 0x00, 0x00, 0x00}};
+        0x00,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36
+    };
+
 // Anurag Mishra
 void shiftRows(unsigned char array[][4][4], int num) // A numx4x4 array is received
 {
@@ -123,7 +116,7 @@ void subBytes(unsigned char temp_vector[4][4]) //Anurag Mishra
 
 void roundConst(unsigned char temp_vector[], int keynum) // Anurag Mishra
 {
-    temp_vector[0] = temp_vector[0] ^ roundconstants[keynum][0];
+    temp_vector[0] = temp_vector[0] ^ roundconstants[keynum];
 }
 
 void finalRoundKey(unsigned char temp_vector[], unsigned char r_keys[][4][4], int keynum) // Anurag Mishra
@@ -210,6 +203,7 @@ void mixcolumns(unsigned char state[4][4]) {
         }
     }
 }
+
 void addRoundKey(unsigned char ptext[4][4], unsigned char roundKey[4][4]) 
 {
 	for (int col = 0; col < 4; col++) {
@@ -231,21 +225,6 @@ int main()
             {0x7A, 0x45, 0xF2, 0x81}
         };
     keySchedule(roundkeys, cipherkey);
-    /*
-    unsigned char array[][4][4] = {
-        {{'a', 'b', 'c', 'd'},
-         {'e', 'f', 'g', 'h'},
-         {'i', 'j', 'k', 'l'},
-         {'m', 'n', 'o', 'p'}},
-        {{'q', 'r', 's', 't'},
-         {'u', 'v', 'w', 'x'},
-         {'y', 'z', 'A', 'B'},
-         {'C', 'D', 'E', 'F'}},
-        {{'G', 'H', 'I', 'J'},
-         {'K', 'L', 'M', 'N'},
-         {'O', 'P', 'Q', 'R'},
-         {'S', 'T', 'U', 'V'}}};
-    */
 
     char* txt="HopThisisgoingtoworkperfectlynow";
 	int blocks=strlen(txt)/16 ;
@@ -298,7 +277,7 @@ int main()
 		for (int i = 0; i < 4; i++)
 		{
 			for (int j = 0; j < 4; j++)
-				printf("%c ", ptext[k][i][j]);
+				printf("%x ", ptext[k][i][j]);
 			printf("\n");
 		}
 		printf("\n");
