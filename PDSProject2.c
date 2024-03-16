@@ -210,7 +210,15 @@ void mixcolumns(unsigned char state[4][4]) {
         }
     }
 }
-
+void addRoundKey(unsigned char ptext[4][4], unsigned char roundKey[4][4]) 
+{
+	for (int col = 0; col < 4; col++) {
+		for (int row = 0; row < 4; row++)
+		{
+			ptext[row][col] ^= roundKey[row][col];
+		}
+	}
+}
 int main()
 {
     int num = 3;
