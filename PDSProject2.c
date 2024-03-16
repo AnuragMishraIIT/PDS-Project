@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 const unsigned char sbox[16][16] = // Tushar Jawane
     //     0     1     2    3      4     5     6     7     8     9     a     b     c    d      e     f
     {
@@ -67,14 +67,15 @@ void shiftRows2(unsigned char array[4][4]) // A numx4x4 array is received
 			temp[j] = array[i][j];
 		}
 
-		for (j = 0; j < 4; j++)
+		for (j = 0; j < 4-i; j++)
 		{
 			array[i][j] = array[i][j + i];
 		}
 
-		index = 0;
-		for (j = 4 - i; j < 4; j++, index++)
+		
+		for ( index = 0,j = 4 - i; j < 4; j++, index++)
 		{
+           
 			array[i][j] = temp[index];
 		}
 	}
@@ -213,6 +214,20 @@ void addRoundKey(unsigned char ptext[4][4], unsigned char roundKey[4][4])
 		}
 	}
 }
+
+void plain_text_block_generate(char* txt,unsigned char ptext[][4][4],int blocks)
+{
+    for(int i=0,c=0;i<blocks;i++)
+	{
+		for(int row=0;row<4;row++)
+		{
+			for(int col=0;col<4;col++)
+			{
+				ptext[i][row][col] = txt[c++];
+			}
+		}
+	}
+}
 int main()
 {
     int num = 3;
@@ -224,22 +239,26 @@ int main()
             {0x3E, 0x11, 0x9B, 0xD8},
             {0x7A, 0x45, 0xF2, 0x81}
         };
-    keySchedule(roundkeys, cipherkey);
-
-    char* txt="HopThisisgoingtoworkperfectlynow";
-	int blocks=strlen(txt)/16 ;
-	unsigned char ptext[blocks][4][4];
-	
-	for(int i=0,c=0;i<blocks;i++)
+    char* cipher_key = "abcdefghijklmnop";
+    unsigned char cipher_key_final[4][4];
+    int c=0;
+    for(int row=0;row<4;row++)
 	{
-		for(int row=0;row<4;row++)
+		for(int col=0;col<4;col++)
 		{
-			for(int col=0;col<4;col++)
-			{
-				ptext[i][row][col] = txt[c++];
-			}
+			cipher_key_final[row][col] = cipher_key[c++];
 		}
 	}
+    keySchedule(roundkeys, cipher_key_final);
+
+    char* str=(char*)malloc(4096*sizeof(char));
+    scanf("%[^\n]s",str);
+    str=realloc(str,(strlen(str)+1)*sizeof(char));
+
+	int blocks=strlen(str)/16 ;
+	unsigned char ptext[blocks][4][4];
+	plain_text_block_generate(str,ptext,blocks);
+	
 
 	for (int k = 0; k < blocks; k++)
 	{
@@ -282,5 +301,6 @@ int main()
 		}
 		printf("\n");
 	}
+    free(str);
     return 0;
 }
