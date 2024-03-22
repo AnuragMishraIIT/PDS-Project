@@ -192,31 +192,6 @@ void keySchedule(unsigned char r_keys[][4][4], unsigned char ciph_key[4][4]) // 
         finalRoundKey(temp_vect, r_keys, k);
     }
 }
-/*
-unsigned char multiply(unsigned char a, unsigned char b)
-{ // Note: Bits numbering starts from the right to the left from 0 to 7 (since there are only 8 bits in char)
-    unsigned char p = 0;
-    unsigned char high_bit_set;
-    for (int i = 0; i < 8; i++)
-    {
-        if ((b & 1) != 0)
-        {
-            p ^= a;
-        }
-        high_bit_set = a & 0x80; // Checks if the 7th bit is on or off for 'a'
-
-        a <<= 1; // Soon 'b' will be right shifted to cancel effects in polynomial multiplication. Old 7th bit is removed.
-
-        if (high_bit_set != 0) // If 7th bit of old 'a' (Or the 8th bit of new 'a') was (is) on.
-        {
-            a ^= 0x1B; // 0x1B is the irreducible polynomial in GF(2^8)
-            // 0x1B is equivalent to x^8 + x^4 + x^3 + x + 1
-            // Toggles the values corresponding to the 4th,3rd,1st and 0th bits (Which is irreducible polynomial theorem itself)
-        }
-        b >>= 1; // Cancels effect of shifting of 'a' in polynomial multiplication
-    }
-    return p;
-}*/
 
 
 unsigned char multiply(unsigned char a, unsigned char b)
@@ -341,6 +316,22 @@ void block_generate(int block, char txt[], unsigned char array[][4][4])
         }
     }
 }
+char* single_line(unsigned char array[][4][4],int blocks)
+{
+    char *txt=(char*)malloc(16*blocks*sizeof(char)+1);
+    int pos = 0;
+    for (int k = 0; k < blocks; k++)
+    {
+        printf("\nArray %d:\n\n", k + 1);
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+                txt[pos++] = array[k][i][j];
+        }
+    }
+    txt[pos] = '\0';
+    return txt;
+}
 
 void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
 {
@@ -399,6 +390,7 @@ void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
         }
         printf("\n");
     }
+    printf("\n%s\n",single_line(encrypted_text,blocks));
 }
 
 void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
@@ -456,9 +448,10 @@ void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
         }
         printf("\n");
     }
+    printf("\n%s\n",single_line(ptext,blocks));
 }
 
-
+ 
 int main()
 {
     unsigned char roundkeys[11][4][4]; // Stores the 11 4x4 round keys
