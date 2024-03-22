@@ -163,7 +163,7 @@ void subBytes(unsigned char temp_vector[4][4]) // Anurag Mishra
     }
 }
 
-void insubBytes(unsigned char temp_vector[4][4]) // Anurag Mishra
+void inv_subBytes(unsigned char temp_vector[4][4]) // Anurag Mishra
 {
     for (int row = 0; row < 4; row++)
     {
@@ -221,7 +221,7 @@ void keySchedule(unsigned char r_keys[][4][4], unsigned char ciph_key[4][4]) // 
         finalRoundKey(temp_vect, r_keys, k);
     }
 }
-
+/*
 unsigned char multiply(unsigned char a, unsigned char b)
 { // Note: Bits numbering starts from the right to the left from 0 to 7 (since there are only 8 bits in char)
     unsigned char p = 0;
@@ -245,6 +245,32 @@ unsigned char multiply(unsigned char a, unsigned char b)
         b >>= 1; // Cancels effect of shifting of 'a' in polynomial multiplication
     }
     return p;
+}*/
+
+
+unsigned char multiply(unsigned char a, unsigned char b)
+{
+    unsigned short int temp_multiply=0;//Stores temporary multiplication of a and b in 16 bits
+
+    for(int i=0;i<8;i++) //Traverses 8 bits of 'a'
+    {
+        for(int j=0;j<8;j++) //Traverses 8 bits of 'b'
+        {
+            if(((a&(1<<i))==(1<<i))&&((b&(1<<j))==(1<<j)))
+            temp_multiply=temp_multiply^(1<<(i+j));
+        }
+    }
+    unsigned short int irreducible_poly=0x1B;
+    for(int k=8;k<15;k++)
+    {   
+        if((temp_multiply&(1<<k))==(1<<k))
+        {
+            temp_multiply=temp_multiply^irreducible_poly;
+        }
+        irreducible_poly=irreducible_poly<<1;
+    }
+    unsigned char multiply=temp_multiply&0xFF; //Extracts the last 8 bits
+    return (multiply);
 }
 
 void mixcolumns(unsigned char state[4][4])
@@ -278,6 +304,38 @@ void mixcolumns(unsigned char state[4][4])
     }
 }
 
+void inv_MixColumns(unsigned char state[4][4])
+{
+    unsigned char matrix[4][4] =
+        {
+            {0x0e, 0x0b, 0x0d, 0x09},
+            {0x09, 0x0e, 0x0b, 0x0d},
+            {0x0d, 0x09, 0x0e, 0x0b},
+            {0x0b, 0x0d, 0x09, 0x0e}};
+
+    unsigned char result[4][4];
+
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            result[i][j] = multiply(matrix[i][0], state[0][j]) ^
+                           multiply(matrix[i][1], state[1][j]) ^
+                           multiply(matrix[i][2], state[2][j]) ^
+                           multiply(matrix[i][3], state[3][j]);
+        }
+    }
+    // Copy result back to state matrix
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            state[i][j] = result[i][j];
+        }
+    }
+}
+
+
 void addRoundKey(unsigned char ptext[4][4], unsigned char roundKey[4][4])
 {
     for (int col = 0; col < 4; col++)
@@ -303,35 +361,73 @@ void plain_text_block_generate(char *txt, unsigned char ptext[][4][4], int block
     }
 }
 // Work n progress
-void inverseShiftRows(unsigned char array[][4][4], int num) // A numx4x4 array is received
+
+void encrypted_text_block_generate(char* txt,unsigned char encrypted_text[][4][4],int blocks)
 {
-    int k, i, j, index;
+    for(int i=0,c=0;i<blocks;i++)
+	{
+		for(int row=0;row<4;row++)
+		{
+			for(int col=0;col<4;col++)
+			{
+				encrypted_text[i][row][col] = txt[c++];
+            }
+		}
+	}
+}
+
+
+void inv_ShiftRows(unsigned char array[4][4]) // A numx4x4 array is received
+{
+    int i, j, index;
     char temp[3];
-
-    for (k = 0; k < num; k++) // This loop runs for each 4x4 block.
+    //###########################################################################################
+    //####################  changed the func from receiving 3d array to 2d array  ###############
+    //###########################################################################################
+    for (i = 0; i < 4; i++) // This loop takes account of the row being worked upon
     {
-        for (i = 0; i < 4; i++) // This loop takes account of the row being worked upon
+        for (index = 0, j = 4 - i; j < 4; j++, index++)
         {
-            for (index = 0, j = 4 - i; j < 4; j++, index++)
-            {
-                temp[index] = array[k][i][j];
-            }
+            temp[index] = array[i][j];
+        }
 
-            for (j = 3; j > index; j--)
-            {
-                array[k][i][j] = array[k][i][j - i];
-            }
+        for (j = 3; j > index; j--)
+        {
+            array[i][j] = array[i][j - i];
+        }
 
-            for (index = 0, j = 4 - i; j < 4; j++, index++)
-            {
-                array[k][i][j] = temp[index];
-            }
+        for (index = 0, j = 4 - i; j < 4; j++, index++)
+        {
+            array[i][j] = temp[index];
         }
     }
+    
 }
+
+void inverse_Cypher(int blocks,unsigned char encrypted_text[][4][4],unsigned char roundkeys[][4][4])
+{
+    for(int current_block=0;current_block<blocks;current_block++)
+	{
+		//encrypted_text is the 3d matrix having the different blocks
+		addRoundKey(encrypted_text[current_block], roundkeys[10]);
+		// Main rounds
+		for (int round = 9; round > 0; round--)
+		{
+            inv_ShiftRows(encrypted_text[current_block]);
+            inv_subBytes(encrypted_text[current_block]);
+			addRoundKey(encrypted_text[current_block], roundkeys[round]);
+            inv_MixColumns(encrypted_text[current_block]);
+		}
+
+		// Final round
+		inv_subBytes(encrypted_text[current_block]);
+		inv_ShiftRows(encrypted_text[current_block]);
+		addRoundKey(encrypted_text[current_block], roundkeys[0]);
+	}
+}
+
 int main()
 {
-    int num = 3;
     unsigned char roundkeys[11][4][4]; // Stores the 11 4x4 round keys
     unsigned char cipherkey[4][4] =    // Initial key or secret key or cipher key to make round keys
         {
@@ -401,5 +497,34 @@ int main()
         printf("\n");
     }
     free(str);
+
+    //###################################################################################################
+    //#####################   DECRYPTION HERE    ########################################################
+    //###################################################################################################
+
+    printf("Enter encrypted string:");
+    char *txt=(char*)malloc(4096*sizeof(char));
+    scanf("%[^\n]s",txt);
+    txt=realloc(txt,(strlen(txt)+1)*sizeof(char));
+
+    //blocks for pre-encrypted block
+    blocks=strlen(txt)/16;
+	unsigned char encrypted_text[blocks][4][4];
+
+    //now fill the 3d array with the encrypted text
+	encrypted_text_block_generate(txt,encrypted_text,blocks);
+
+    for (int k = 0; k < blocks; k++)
+	{
+		printf("\nEncrypted block %d:\n\n", k + 1);
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+				printf("%c ", encrypted_text[k][i][j]);
+			printf("\n");
+		}
+		printf("\n");
+	}
     return 0;
 }
+
