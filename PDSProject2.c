@@ -50,32 +50,6 @@ const unsigned char roundconstants[11] = // Anurag Mishra
     };
 
 // Anurag Mishra
-void shiftRows(unsigned char array[][4][4], int num) // A numx4x4 array is received
-{
-    int k, i, j, index;
-    char temp[3];
-
-    for (k = 0; k < num; k++) // This loop runs for each 4x4 block.
-    {
-        for (i = 0; i < 4; i++) // This loop takes account of the row being worked upon
-        {
-            for (j = 0; j < i; j++)
-            {
-                temp[j] = array[k][i][j];
-            }
-
-            for (j = 0; j < 4 - i; j++)
-            {
-                array[k][i][j] = array[k][i][j + i];
-            }
-
-            for (index = 0, j = 4 - i; j < 4; j++, index++)
-            {
-                array[k][i][j] = temp[index];
-            }
-        }
-    }
-}
 
 void shiftRows2(unsigned char array[4][4]) // A numx4x4 array is received
 {
@@ -102,31 +76,28 @@ void shiftRows2(unsigned char array[4][4]) // A numx4x4 array is received
     }
 }
 
-void inShiftRows(unsigned char array[][4][4], int num) // A numx4x4 array is received
+void inv_ShiftRows(unsigned char array[4][4]) // A numx4x4 array is received
 {
-    int k, i, j, index;
+    int i, j, index;
     char temp[3];
-
-    for (k = 0; k < num; k++) // This loop runs for each 4x4 block.
+    for (i = 0; i < 4; i++) // This loop takes account of the row being worked upon
     {
-        for (i = 0; i < 4; i++) // This loop takes account of the row being worked upon
+        for (index = 0, j = 4 - i; j < 4; index++, j++)
         {
-            for (index = 0, j = 4 - i; j < 4; index++, j++)
-            {
-                temp[index] = array[k][i][j];
-            }
+            temp[index] = array[i][j];
+        }
 
-            for (j = 3 - i; j >=0; j--)
-            {
-                array[k][i][j + i] = array[k][i][j];
-            }
+        for (j = 3 - i; j >=0; j--)
+        {
+            array[i][j + i] = array[i][j];
+        }
 
-            for (j =0; j < i; j++)
-            {
-                array[k][i][j] = temp[j];
-            }
+        for (j =0; j < i; j++)
+        {
+            array[i][j] = temp[j];
         }
     }
+    
 }
 
 void rotword(unsigned char temp_vector[]) // Anurag Mishra
@@ -369,32 +340,6 @@ void block_generate(int block, char txt[], unsigned char array[][4][4])
             }
         }
     }
-}
-
-
-void inv_ShiftRows(unsigned char array[4][4]) // A numx4x4 array is received
-{
-    int i, j, index;
-    char temp[3];
-
-    for (i = 0; i < 4; i++) // This loop takes account of the row being worked upon
-    {
-        for (index = 0, j = 4 - i; j < 4; j++, index++)
-        {
-            temp[index] = array[i][j];
-        }
-
-        for (j = 3; j > index; j--)
-        {
-            array[i][j] = array[i][j - i];
-        }
-
-        for (index = 0, j = 4 - i; j < 4; j++, index++)
-        {
-            array[i][j] = temp[index];
-        }
-    }
-    
 }
 
 void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
