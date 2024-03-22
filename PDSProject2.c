@@ -429,14 +429,9 @@ void inverse_Cypher(int blocks,unsigned char encrypted_text[][4][4],unsigned cha
 int main()
 {
     unsigned char roundkeys[11][4][4]; // Stores the 11 4x4 round keys
-    unsigned char cipherkey[4][4] =    // Initial key or secret key or cipher key to make round keys
-        {
-            {0xAB, 0x5F, 0x72, 0xE3},
-            {0x94, 0x2D, 0x8A, 0x6C},
-            {0x3E, 0x11, 0x9B, 0xD8},
-            {0x7A, 0x45, 0xF2, 0x81}};
-    char *cipher_key = "abcdefghijklmnop";
+    char cipher_key[] = "abcdefghijklmnop";
     unsigned char cipher_key_final[4][4];
+
     int c = 0;
     for (int row = 0; row < 4; row++)
     {
@@ -447,6 +442,8 @@ int main()
     }
     keySchedule(roundkeys, cipher_key_final);
 
+    //Input string
+    printf("Enter string to be encrypted:\n");
     char *str = (char *)malloc(4096 * sizeof(char));
     scanf("%[^\n]s", str);
     str = realloc(str, (strlen(str) + 1) * sizeof(char));
@@ -485,13 +482,14 @@ int main()
         shiftRows2(ptext[current_block]);
         addRoundKey(ptext[current_block], roundkeys[10]);
     }
+    printf("Encrypted text:\n");
     for (int k = 0; k < blocks; k++)
     {
         printf("\nArray %d:\n\n", k + 1);
         for (int i = 0; i < 4; i++)
         {
             for (int j = 0; j < 4; j++)
-                printf("%x ", ptext[k][i][j]);
+                printf("%#x ", ptext[k][i][j]);
             printf("\n");
         }
         printf("\n");
@@ -503,6 +501,7 @@ int main()
     //###################################################################################################
 
     printf("Enter encrypted string:");
+    getchar();
     char *txt=(char*)malloc(4096*sizeof(char));
     scanf("%[^\n]s",txt);
     txt=realloc(txt,(strlen(txt)+1)*sizeof(char));
