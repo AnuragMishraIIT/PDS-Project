@@ -347,33 +347,28 @@ void addRoundKey(unsigned char ptext[4][4], unsigned char roundKey[4][4])
     }
 }
 
-void plain_text_block_generate(char *txt, unsigned char ptext[][4][4], int blocks)
-{
-    for (int i = 0, c = 0; i < blocks; i++)
+void block_generate(int block, char txt[], unsigned char array[][4][4])
+{   
+    int flag=0; //Checks if we have started padding
+    for (int i = 0, c = 0; i < block; i++)
     {
         for (int row = 0; row < 4; row++)
         {
             for (int col = 0; col < 4; col++)
-            {
-                ptext[i][row][col] = txt[c++];
+            {   
+                if(txt[c]=='\0'||flag==1)
+                {
+                    flag=1;//Padding
+                    array[i][row][col] = ' ';
+                }
+                else
+                {
+                array[i][row][col] = txt[c];
+                }
+                c++;
             }
         }
     }
-}
-// Work n progress
-
-void encrypted_text_block_generate(char* txt,unsigned char encrypted_text[][4][4],int blocks)
-{
-    for(int i=0,c=0;i<blocks;i++)
-	{
-		for(int row=0;row<4;row++)
-		{
-			for(int col=0;col<4;col++)
-			{
-				encrypted_text[i][row][col] = txt[c++];
-            }
-		}
-	}
 }
 
 
@@ -381,9 +376,7 @@ void inv_ShiftRows(unsigned char array[4][4]) // A numx4x4 array is received
 {
     int i, j, index;
     char temp[3];
-    //###########################################################################################
-    //####################  changed the func from receiving 3d array to 2d array  ###############
-    //###########################################################################################
+
     for (i = 0; i < 4; i++) // This loop takes account of the row being worked upon
     {
         for (index = 0, j = 4 - i; j < 4; j++, index++)
@@ -404,8 +397,31 @@ void inv_ShiftRows(unsigned char array[4][4]) // A numx4x4 array is received
     
 }
 
-void inverse_Cypher(int blocks,unsigned char encrypted_text[][4][4],unsigned char roundkeys[][4][4])
+void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
 {
+
+    int size=strlen(txt);
+    int blocks=((size%16)?(size/16+1):(size/16));
+    unsigned char encrypted_text[blocks][4][4];
+
+    //now fill the 3d array with the encrypted text
+    block_generate(blocks,txt,encrypted_text);
+
+    //Printing the blocks containing the encrypted text
+    for (int k = 0; k < blocks; k++)
+	{
+		printf("\nEncrypted block %d:\n\n", k + 1);
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+				printf("%c ", encrypted_text[k][i][j]);
+			printf("\n"); 
+		}
+		printf("\n");
+	}
+
+    //beginning decryption process here
+
     for(int current_block=0;current_block<blocks;current_block++)
 	{
 		//encrypted_text is the 3d matrix having the different blocks
@@ -420,11 +436,83 @@ void inverse_Cypher(int blocks,unsigned char encrypted_text[][4][4],unsigned cha
 		}
 
 		// Final round
-		inv_subBytes(encrypted_text[current_block]);
 		inv_ShiftRows(encrypted_text[current_block]);
+        inv_subBytes(encrypted_text[current_block]);
 		addRoundKey(encrypted_text[current_block], roundkeys[0]);
 	}
+
+    //Printing the blocks containing the decrypted text
+    printf("Decrypted text:\n");
+    for (int k = 0; k < blocks; k++)
+    {
+        printf("\nArray %d:\n\n", k + 1);
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+                printf("%c ", encrypted_text[k][i][j]);
+            printf("\n");
+        }
+        printf("\n");
+    }
 }
+
+void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
+{
+    int size=strlen(txt);
+    int blocks=((size%16)?(size/16+1):(size/16));
+    unsigned char ptext[blocks][4][4];
+
+    //now fill the 3d array with the encrypted text
+    block_generate(blocks,txt,ptext);
+
+    //Printing the blocks containing the plain text
+    for (int k = 0; k < blocks; k++)
+    {
+        printf("\nArray %d:\n\n", k + 1);
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+                printf("%c ", ptext[k][i][j]);
+            printf("\n");
+        }
+        printf("\n");
+    }
+
+    //Encryption process starts here
+    for (int current_block = 0; current_block < blocks; current_block++)
+    {
+        addRoundKey(ptext[current_block], roundkeys[0]);
+        // Main rounds
+        for (int round = 1; round < 10; round++)
+        {
+            subBytes(ptext[current_block]);
+            shiftRows2(ptext[current_block]);
+            mixcolumns(ptext[current_block]);
+            addRoundKey(ptext[current_block], roundkeys[round]);
+        }
+
+        // Final round
+        subBytes(ptext[current_block]);
+        shiftRows2(ptext[current_block]);
+        addRoundKey(ptext[current_block], roundkeys[10]);
+    }   
+
+
+    //Print the blocks containing the encrypted text
+    printf("Encrypted text:\n");
+    for (int k = 0; k < blocks; k++)
+    {
+        printf("\nArray %d:\n\n", k + 1);
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+                printf("%c ", ptext[k][i][j]);
+            printf("\n");
+        }
+        printf("\n");
+    }
+}
+
 
 int main()
 {
@@ -440,60 +528,21 @@ int main()
             cipher_key_final[row][col] = cipher_key[c++];
         }
     }
+
     keySchedule(roundkeys, cipher_key_final);
 
+
+    //###################################################################################################
+    //#####################   ENCRYPTION HERE    ########################################################
+    //###################################################################################################
     //Input string
     printf("Enter string to be encrypted:\n");
     char *str = (char *)malloc(4096 * sizeof(char));
     scanf("%[^\n]s", str);
     str = realloc(str, (strlen(str) + 1) * sizeof(char));
-
-    int blocks = strlen(str) / 16;
-    unsigned char ptext[blocks][4][4];
-    plain_text_block_generate(str, ptext, blocks);
-
-    for (int k = 0; k < blocks; k++)
-    {
-        printf("\nArray %d:\n\n", k + 1);
-        for (int i = 0; i < 4; i++)
-        {
-            for (int j = 0; j < 4; j++)
-                printf("%c ", ptext[k][i][j]);
-            printf("\n");
-        }
-        printf("\n");
-    }
-
-    for (int current_block = 0; current_block < blocks; current_block++)
-    {
-
-        addRoundKey(ptext[current_block], roundkeys[0]);
-        // Main rounds
-        for (int round = 1; round < 10; round++)
-        {
-            subBytes(ptext[current_block]);
-            shiftRows2(ptext[current_block]);
-            mixcolumns(ptext[current_block]);
-            addRoundKey(ptext[current_block], roundkeys[round]);
-        }
-
-        // Final round
-        subBytes(ptext[current_block]);
-        shiftRows2(ptext[current_block]);
-        addRoundKey(ptext[current_block], roundkeys[10]);
-    }
-    printf("Encrypted text:\n");
-    for (int k = 0; k < blocks; k++)
-    {
-        printf("\nArray %d:\n\n", k + 1);
-        for (int i = 0; i < 4; i++)
-        {
-            for (int j = 0; j < 4; j++)
-                printf("%#x ", ptext[k][i][j]);
-            printf("\n");
-        }
-        printf("\n");
-    }
+    
+    //CALLING ENCRYPTION FUNCTION
+    encrypt_cypher(str,roundkeys);
     free(str);
 
     //###################################################################################################
@@ -506,24 +555,10 @@ int main()
     scanf("%[^\n]s",txt);
     txt=realloc(txt,(strlen(txt)+1)*sizeof(char));
 
-    //blocks for pre-encrypted block
-    blocks=strlen(txt)/16;
-	unsigned char encrypted_text[blocks][4][4];
+    //CALLING DECRYPTION FUNCTION
+    inverse_Cypher(txt,roundkeys);
+    free(txt);
 
-    //now fill the 3d array with the encrypted text
-	encrypted_text_block_generate(txt,encrypted_text,blocks);
-
-    for (int k = 0; k < blocks; k++)
-	{
-		printf("\nEncrypted block %d:\n\n", k + 1);
-		for (int i = 0; i < 4; i++)
-		{
-			for (int j = 0; j < 4; j++)
-				printf("%c ", encrypted_text[k][i][j]);
-			printf("\n");
-		}
-		printf("\n");
-	}
     return 0;
 }
 
