@@ -322,7 +322,6 @@ char* single_line(unsigned char array[][4][4],int blocks)
     int pos = 0;
     for (int k = 0; k < blocks; k++)
     {
-        printf("\nArray %d:\n\n", k + 1);
         for (int i = 0; i < 4; i++)
         {
             for (int j = 0; j < 4; j++)
@@ -499,4 +498,3 @@ int main()
 
     return 0;
 }
-
