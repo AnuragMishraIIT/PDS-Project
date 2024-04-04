@@ -48,13 +48,15 @@ const unsigned char inv_Sbox[16][16] =
 };
 
 //Ayush Gautam
-void clearBuffer()  //For clearing buffer left after taking string
+//General purpose: For clearing buffer left after taking string
+void clearBuffer()  
 {
     int c;
     while ((c = getchar()) != '\n');
 }
 
 // Anurag Mishra
+//For KeySchedule: Used for XORing
 const unsigned char roundconstants[11] =
     {
         0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
@@ -62,6 +64,7 @@ const unsigned char roundconstants[11] =
 
 
 // Anurag Mishra
+//Encryption: Left Circular shifting of i'th indexed row i times
 void shiftRows(unsigned char array[4][4]) // A 4x4 array is received
 {
     int i, j, index;
@@ -88,7 +91,7 @@ void shiftRows(unsigned char array[4][4]) // A 4x4 array is received
 }
 
 //Anurag Mishra
-//
+//Decryption: Right Circular shifting of i'th indexed row i times
 void inv_ShiftRows(unsigned char array[4][4]) // A 4x4 array is received
 {
     int i, j, index;
@@ -113,9 +116,9 @@ void inv_ShiftRows(unsigned char array[4][4]) // A 4x4 array is received
     
 }
 
-// Anurag Mishra
-//Circularly rotates the bytes of the Word to upwards once.
-void rotword(unsigned char word[]) 
+//Anurag Mishra
+//For KeySchedule: Circularly rotates the bytes of the Word to upwards once.
+void rotWord(unsigned char word[]) 
 {
     int temp = word[0];
     for (int i = 0; i < 3; i++)
@@ -126,11 +129,11 @@ void rotword(unsigned char word[])
 }
 
 //Anurag Mishra
-// Substitute bytes of the wor from sbox function
-void subword(unsigned char word[]) 
+//For KeySchedule: Substitutes bytes of the word with sbox
+void subWord(unsigned char word[]) 
 {
-    for (int i = 0; i < 4; i++) // Hexadecimal digit of the form 0x(XY)
-    {
+    for (int i = 0; i < 4; i++) 
+    {   // Hexadecimal digit of the form 0x(XY)
         int Y = word[i] & ((1 << 4) - 1);
         int X = (word[i]) >> 4;
 
@@ -138,64 +141,72 @@ void subword(unsigned char word[])
     }
 }
 
-void subBytes(unsigned char word[4][4]) // Anurag Mishra
-{
-    for (int row = 0; row < 4; row++)
-    {
-        for (int col = 0; col < 4; col++) // Hexadecimal digit of the form 0x(XY)
-        {
-            int Y = word[row][col] & ((1 << 4) - 1);
-            int X = word[row][col] >> 4;
-            word[row][col] = sbox[X][Y];
-        }
-    }
-}
-
-void inv_subBytes(unsigned char word[4][4]) // Anurag Mishra
-{
-    for (int row = 0; row < 4; row++)
-    {
-        for (int col = 0; col < 4; col++) // Hexadecimal digit of the form 0x(XY)
-        {
-            int Y = word[row][col] & ((1 << 4) - 1);
-            int X = word[row][col] >> 4;
-            word[row][col] = inv_Sbox[X][Y];
-        }
-    }
-}
-
-void roundConst(unsigned char word[], int keynum) // Anurag Mishra
-{
-    word[0] = word[0] ^ roundconstants[keynum];
-}
-
-void finalRoundKey(unsigned char word[], unsigned char r_keys[][4][4], int keynum) // Anurag Mishra
+//Anurag Mishra
+//Encryption: Substitutes the bytes of the word using sbox
+void subBytes(unsigned char word[4][4])
 {
     for (int i = 0; i < 4; i++)
     {
-        r_keys[keynum][i][0] = word[i] ^ r_keys[keynum - 1][i][0];
-    }
-
-    for (int j = 1; j < 4; j++)
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            r_keys[keynum][i][j] = r_keys[keynum][i][j - 1] ^ r_keys[keynum - 1][i][j];
+        for (int j = 0; j < 4; j++)
+        {   // Hexadecimal digit of the form 0x(XY)
+            int Y = word[i][j] & ((1 << 4) - 1);
+            int X = word[i][j] >> 4;
+            word[i][j] = sbox[X][Y];
         }
     }
 }
 
 //Anurag Mishra
-//All 11 rounds keys from the cipher key are generated
-void keySchedule(unsigned char r_keys[][4][4], unsigned char ciph_key[4][4])
+//Decryption: Substitutes the bytes of the word using inv_Sbox
+void inv_SubBytes(unsigned char word[4][4])
 {
-    unsigned char temp_vect[4]; // a 4x1 column vector to be intialized with 4th column of kth round key
-    
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++) // Hexadecimal digit of the form 0x(XY)
+        {
+            int Y = word[i][j] & ((1 << 4) - 1);
+            int X = word[i][j] >> 4;
+            word[i][j] = inv_Sbox[X][Y];
+        }
+    }
+}
+
+// Anurag Mishra
+//For KeySchedule: XORing of the received word with the round constants
+void roundConst(unsigned char word[], int keynum) 
+{
+    word[0] = word[0] ^ roundconstants[keynum];
+}
+
+//Anurag Mishra
+//For KeySchedule: A given round key of index 'keynum' is completed
+void finalRoundKey(unsigned char word[], unsigned char round_keys[][4][4], int keynum)
+{
+    for (int i = 0; i < 4; i++) //Completing first column (word) of round key of index 'keynum'
+    {
+        round_keys[keynum][i][0] = word[i] ^ round_keys[keynum - 1][i][0];
+    }
+
+    for (int j = 1; j < 4; j++) //Completing the second, the third and the fourth columns (words) of round key of index 'keynum'
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            round_keys[keynum][i][j] = round_keys[keynum][i][j - 1] ^ round_keys[keynum - 1][i][j];
+        }
+    }
+}
+
+//Anurag Mishra
+//All 11 rounds keys from the cipher key are generated by this function
+void keySchedule(unsigned char round_keys[][4][4], unsigned char ciph_key[4][4])
+{
+    unsigned char temp_vect[4]; // a 4x1 column vector to be intialized with 4th column (word) of kth round key
+
     for (int i = 0; i < 4; i++) // Assigning Cipher key to the zeroth key
     {
         for (int j = 0; j < 4; j++)
         {
-            r_keys[0][i][j] = ciph_key[i][j];
+            round_keys[0][i][j] = ciph_key[i][j];
         }
     }
 
@@ -203,17 +214,17 @@ void keySchedule(unsigned char r_keys[][4][4], unsigned char ciph_key[4][4])
     {
         for (int i = 0; i < 4; i++)
         {
-            temp_vect[i] = r_keys[k - 1][i][3]; // Key k>0 is derived from previous round key k-1
+            temp_vect[i] = round_keys[k - 1][i][3]; // Key k>0 is derived from previous round key k-1
         }
-
-        rotword(temp_vect);
-        subword(temp_vect);
+        rotWord(temp_vect);
+        subWord(temp_vect);
         roundConst(temp_vect, k);
-        finalRoundKey(temp_vect, r_keys, k);
+        finalRoundKey(temp_vect, round_keys, k);
     }
 }
 
-
+//Anurag Mishra
+//For Encryption/Decryption: Used for multiplying two hexadecimal numbers of 1 byte in mixColumns and inv_MixColumns
 unsigned char multiply(unsigned char a, unsigned char b)
 {
     unsigned short int temp_multiply=0;//Stores temporary multiplication of a and b in 16 bits
@@ -222,31 +233,34 @@ unsigned char multiply(unsigned char a, unsigned char b)
     {
         for(int j=0;j<8;j++) //Traverses 8 bits of 'b'
         {
-            if(((a&(1<<i))==(1<<i))&&((b&(1<<j))==(1<<j)))
+            if(((a&(1<<i))==(1<<i))&&((b&(1<<j))==(1<<j))) //If i'th bit of a and j'th bit of b are on
             temp_multiply=temp_multiply^(1<<(i+j));
         }
     }
     unsigned short int irreducible_poly=0x1B;
     for(int k=8;k<15;k++)
     {   
-        if((temp_multiply&(1<<k))==(1<<k))
+        if((temp_multiply&(1<<k))==(1<<k)) //If k'th bit of temp_multiply is on 
         {
-            temp_multiply=temp_multiply^irreducible_poly;
+            temp_multiply=temp_multiply^irreducible_poly; //Applying irreducible polynomial Theorem
         }
         irreducible_poly=irreducible_poly<<1;
     }
-    unsigned char multiply=temp_multiply&0xFF; //Extracts the last 8 bits
+    unsigned char multiply=temp_multiply&0xFF; //Extracts the last 8 bits since (0xFF) in hexadecimal is (11111111) in binary
     return (multiply);
 }
 
-void mixcolumns(unsigned char state[4][4])
+//Anurag Mishra
+//For Encryption: Multiplies the state (temporary stage of a block being encrypted) with a fixed matrix
+void mixColumns(unsigned char state[4][4])
 {
     unsigned char matrix[4][4] =
-        {
-            {0x02, 0x03, 0x01, 0x01},
-            {0x01, 0x02, 0x03, 0x01},
-            {0x01, 0x01, 0x02, 0x03},
-            {0x03, 0x01, 0x01, 0x02}};
+    {
+        {0x02, 0x03, 0x01, 0x01},
+        {0x01, 0x02, 0x03, 0x01},
+        {0x01, 0x01, 0x02, 0x03},
+        {0x03, 0x01, 0x01, 0x02}
+    };
 
     unsigned char result[4][4];
 
@@ -254,10 +268,11 @@ void mixcolumns(unsigned char state[4][4])
     {
         for (int j = 0; j < 4; ++j)
         {
-            result[i][j] = multiply(matrix[i][0], state[0][j]) ^
-                           multiply(matrix[i][1], state[1][j]) ^
-                           multiply(matrix[i][2], state[2][j]) ^
-                           multiply(matrix[i][3], state[3][j]);
+            result[i][j] = 
+            multiply(matrix[i][0], state[0][j]) ^
+            multiply(matrix[i][1], state[1][j]) ^
+            multiply(matrix[i][2], state[2][j]) ^
+            multiply(matrix[i][3], state[3][j]);
         }
     }
     // Copy result back to state matrix
@@ -270,14 +285,17 @@ void mixcolumns(unsigned char state[4][4])
     }
 }
 
+//Anurag Mishra
+//For Decryption: Multiplies the state (temporary stage of a block being decrypted) with a fixed matrix
 void inv_MixColumns(unsigned char state[4][4])
 {
     unsigned char matrix[4][4] =
-        {
-            {0x0e, 0x0b, 0x0d, 0x09},
-            {0x09, 0x0e, 0x0b, 0x0d},
-            {0x0d, 0x09, 0x0e, 0x0b},
-            {0x0b, 0x0d, 0x09, 0x0e}};
+    {
+        {0x0e, 0x0b, 0x0d, 0x09},
+        {0x09, 0x0e, 0x0b, 0x0d},
+        {0x0d, 0x09, 0x0e, 0x0b},
+        {0x0b, 0x0d, 0x09, 0x0e}
+    };
 
     unsigned char result[4][4];
 
@@ -285,10 +303,11 @@ void inv_MixColumns(unsigned char state[4][4])
     {
         for (int j = 0; j < 4; ++j)
         {
-            result[i][j] = multiply(matrix[i][0], state[0][j]) ^
-                           multiply(matrix[i][1], state[1][j]) ^
-                           multiply(matrix[i][2], state[2][j]) ^
-                           multiply(matrix[i][3], state[3][j]);
+            result[i][j] = 
+            multiply(matrix[i][0], state[0][j]) ^
+            multiply(matrix[i][1], state[1][j]) ^
+            multiply(matrix[i][2], state[2][j]) ^
+            multiply(matrix[i][3], state[3][j]);
         }
     }
     // Copy result back to state matrix
@@ -301,7 +320,8 @@ void inv_MixColumns(unsigned char state[4][4])
     }
 }
 
-
+//Ayush Gautam
+//For Encryption/Decryption: XORing the state with roundkeys
 void addRoundKey(unsigned char ptext[4][4], unsigned char roundKey[4][4])
 {
     for (int col = 0; col < 4; col++)
@@ -313,7 +333,9 @@ void addRoundKey(unsigned char ptext[4][4], unsigned char roundKey[4][4])
     }
 }
 
-void block_generate(int block, char txt[], unsigned char array[][4][4],int txtsize)
+//Anurag Mishra
+//For Encryption: Generates the required number of 4x4 blocks from input string (for encryption)
+void blockGenerate(int block, char txt[], unsigned char array[][4][4],int txtsize)
 {   
     int flag=0; //Checks if we have started padding
     for (int k = 0, c = 0; k < block; k++) //Generating kth block 
@@ -341,6 +363,9 @@ void block_generate(int block, char txt[], unsigned char array[][4][4],int txtsi
         }
     }
 }
+
+//Ayush Gautam
+//For Encryption: Generates encrypted string from individual blocks
 char* single_line(unsigned char array[][4][4],int blocks)
 {
     char *txt=(char*)malloc(16*blocks*sizeof(char)+1);
@@ -357,7 +382,9 @@ char* single_line(unsigned char array[][4][4],int blocks)
     return txt;
 }
 
-void stringToHex(char txt[], unsigned char hexstr[],int hexstrsize) //Anurag Mishra
+//Anurag Mishra
+//
+void stringToHex(char txt[], unsigned char hexstr[],int hexstrsize)
 {
     unsigned char value; //Value of digit extracted in hexadecimal
     int i=0,j=0;
@@ -406,7 +433,7 @@ void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
     unsigned char encrypted_text[blocks][4][4];
 
     //now fill the 3d array with the encrypted text
-    block_generate(blocks,hexstr,encrypted_text,size);
+    blockGenerate(blocks,hexstr,encrypted_text,size);
 
     //Printing the blocks containing the encrypted text
     printf("\nIndividual blocks:\n");
@@ -432,14 +459,14 @@ void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
 		for (int round = 9; round > 0; round--)
 		{
             inv_ShiftRows(encrypted_text[current_block]);
-            inv_subBytes(encrypted_text[current_block]);
+            inv_SubBytes(encrypted_text[current_block]);
 			addRoundKey(encrypted_text[current_block], roundkeys[round]);
             inv_MixColumns(encrypted_text[current_block]);
 		}
 
 		// Final round
 		inv_ShiftRows(encrypted_text[current_block]);
-        inv_subBytes(encrypted_text[current_block]);
+        inv_SubBytes(encrypted_text[current_block]);
 		addRoundKey(encrypted_text[current_block], roundkeys[0]);
 	}
 
@@ -466,7 +493,7 @@ void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
     unsigned char ptext[blocks][4][4];
 
     //now fill the 3d array with the encrypted text
-    block_generate(blocks,txt,ptext,size);
+    blockGenerate(blocks,txt,ptext,size);
 
     //Printing the blocks containing the plain text
     printf("\nIndividual blocks:\n");
@@ -492,7 +519,7 @@ void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
         {
             subBytes(ptext[current_block]);
             shiftRows(ptext[current_block]);
-            mixcolumns(ptext[current_block]);
+            mixColumns(ptext[current_block]);
             addRoundKey(ptext[current_block], roundkeys[round]);
         }
 
