@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <math.h>
 
+//Update 05/04/2024 20:08 by Anurag Mishra
+//Interface has been greatly improved
+
 // Tushar Jawane
 const unsigned char sbox[16][16] = 
 //     0     1     2    3      4     5     6     7     8     9     a     b     c    d      e     f
@@ -383,7 +386,7 @@ char* single_line(unsigned char array[][4][4],int blocks)
 }
 
 //Anurag Mishra
-//
+//For Decryption: Converts a string of characters to an actual array of hexadecimal numbers
 void stringToHex(char txt[], unsigned char hexstr[],int hexstrsize)
 {
     unsigned char value; //Value of digit extracted in hexadecimal
@@ -419,6 +422,8 @@ void stringToHex(char txt[], unsigned char hexstr[],int hexstrsize)
     hexstr[j]='\0';
 }
 
+//Ayush Gautam
+//
 void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
 {
     //Change start on 24 March
@@ -436,10 +441,10 @@ void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
     blockGenerate(blocks,hexstr,encrypted_text,size);
 
     //Printing the blocks containing the encrypted text
-    printf("\nIndividual blocks:\n");
+    printf("\n--------INDIVIDUAL BLOCKS (DIRECTLY FROM ENCRYPTED DATA)--------\n");
     for (int k = 0; k < blocks; k++)
 	{
-		printf("\nEncrypted block %d:\n\n", k + 1);
+		printf("\n-----//BLOCK %d//-----\n\n", k + 1);
 		for (int i = 0; i < 4; i++)
 		{
 			for (int j = 0; j < 4; j++)
@@ -471,10 +476,10 @@ void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
 	}
 
     //Printing the blocks containing the decrypted text
-    printf("Decrypted blocks:\n");
+    printf("\n--------INDIVIDUAL DECRYPTED BLOCKS (AFTER DECRYPTION)--------\n");
     for (int k = 0; k < blocks; k++)
     {
-        printf("\nArray %d:\n\n", k + 1);
+        printf("\n-----//BLOCK %d//-----\n\n", k + 1);
         for (int i = 0; i < 4; i++)
         {
             for (int j = 0; j < 4; j++)
@@ -483,7 +488,10 @@ void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
         }
         printf("\n");
     }
-    printf("\n%s\n",single_line(encrypted_text,blocks));
+
+    printf("\n------------------------------------------------------------------------------------------------------------");
+    printf("\n***FINAL DECRYPTED DATA:\n%s\n",single_line(encrypted_text,blocks));
+    printf("------------------------------------------------------------------------------------------------------------\n");
 }
 
 void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
@@ -496,11 +504,11 @@ void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
     blockGenerate(blocks,txt,ptext,size);
 
     //Printing the blocks containing the plain text
-    printf("\nIndividual blocks:\n");
+    printf("\n--------INDIVIDUAL BLOCKS (DIRECTLY FROM TO BE ENCRYPTED DATA)--------\n");
 
     for (int k = 0; k < blocks; k++)
     {
-        printf("\nArray %d:\n\n", k + 1);
+        printf("\n-----//BLOCK %d//-----\n\n", k + 1);
         for (int i = 0; i < 4; i++)
         {
             for (int j = 0; j < 4; j++)
@@ -529,12 +537,12 @@ void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
         addRoundKey(ptext[current_block], roundkeys[10]);
     }   
 
-
     //Print the blocks containing the encrypted text
-    printf("Encrypted text blocks:\n");
+    printf("\n--------INDIVIDUAL ENCRYPTED BLOCKS (AFTER ENCRYPTION)--------\n");
+
     for (int k = 0; k < blocks; k++)
     {
-        printf("\nArray %d:\n\n", k + 1);
+        printf("\n-----//BLOCK %d//-----\n\n", k + 1);
         for (int i = 0; i < 4; i++)
         {
             for (int j = 0; j < 4; j++)
@@ -543,9 +551,10 @@ void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
         }
         printf("\n");
     }
-    printf("\nIn single line: (string format) %s\n",single_line(ptext,blocks));
+    printf("\n------------------------------------------------------------------------------------------------------------");
 
-    printf("\nIn single line: (hex format):\n");
+    printf("\n***FINAL ENCRYPTED DATA (in character format):\n%s\n",single_line(ptext,blocks));
+    printf("\n***FINAL ENCRYPTED DATA (in hexadecimal format):\n");
     for (int k = 0; k < blocks; k++)
     {
         for (int i = 0; i < 4; i++)
@@ -555,6 +564,7 @@ void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
         }
     }
     printf("\n");
+    printf("------------------------------------------------------------------------------------------------------------\n");
 }
 
 char *get_string()
@@ -568,39 +578,42 @@ char *get_string()
     char *file_name = (char *)malloc(100 * sizeof(char));
 
     int option;
-
-    printf("1:Enter string manually\n2:Import string from text file\nOption :");
+    printf("------------------------------------------------------------------------------------------------------------\n");
+    printf("Choose your preference method for encryption:\n");
+    printf("-> Press '1' to enter string manually on terminal\n-> Press '2' to import string from a text file\n\nYour choice:\t");
     scanf("%d",&option);
+    printf("------------------------------------------------------------------------------------------------------------\n");
+
     clearBuffer();
     switch(option)
     {
         case 1:
-            printf("\nEnter string :\n");
+            printf("\nEnter the data:\n");
             scanf("%[^\n]s", str);
             break;
 
         case 2:
-            printf("Enter name of file ending with .txt -- ");
+            printf("Enter name of file ending with .txt:\nFILE NAME->\t");
             scanf("%[^\n]s", file_name);
             FILE *file = fopen(file_name, "r");
             if (file == NULL) 
             {
-                printf("Error opening file ! Not found\nTry again");
+                printf("Error opening file! Not found.\nTry again.\n");
                 exit(1);
             }
             
             if( fgets(str,40960,file) != NULL) 
-                printf("Following line is read:\n%s",str);
+                printf("\nFollowing string has been read from %s:\n%s\n",file_name,str);
             else
             {
-                printf("End of file reached or error occurred.\nTry again");
+                printf("End of file reached or error occurred.\nTry again.");
                 exit(1);
             }
             fclose(file);
             break;
 
         default:
-            printf("Wrong input! Try again");
+            printf("Wrong input! Try again.");
 
     }
     
@@ -624,15 +637,20 @@ int main()
     }
 
     keySchedule(roundkeys, cipher_key_final); //Formulation of round keys
+    char*str,*txt;
 
     do
     {
-        printf("Press accordingly :\n1: Encrypt a text\n2:Decrypt a text\n3:Exit\nOption ::");
+        printf("------------------------------------------------------------------------------------------------------------\n");
+        printf("What do you want to do?\n-> Press '1' for Encryption\n-> Press '2' for Decryption\n-> Press '3' to Exit Program\n\nYour choice:\t");
         scanf("%d",&option);
+        printf("------------------------------------------------------------------------------------------------------------\n");
+
         switch(option)
         {
             case 1:     //ENCRYPTION
-            char *str = get_string();
+            printf("\n****************************  ENCRYPTION  ****************************\n\n");
+            str = get_string();
 
             //CALLING ENCRYPTION FUNCTION
             encrypt_cypher(str,roundkeys);
@@ -640,20 +658,22 @@ int main()
             break;
 
             case 2:     //DECRYPTION
-            char *txt = get_string();
+            printf("\n****************************  DECRYPTION  ****************************\n\n");
+            txt = get_string();
             //CALLING DECRYPTION FUNCTION
             inverse_Cypher(txt,roundkeys);
             free(txt);
             break;
 
             case 3:
-            printf("End of program.");
+            printf("The program has been successfully terminated.\n");
+            printf("------------------------------------------------------------------------------------------------------------\n");
             return 0;
 
             default:
             printf("Invalid input\n");
         }
-    }while(option!=3);
+    } while(option!=3);
     
     return 0;
 }
