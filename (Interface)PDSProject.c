@@ -1,10 +1,18 @@
+/*
+PDS Project
+Date of Final Update: 05/04/2024
+
+Members:
+Ayush Gautam
+Anurag Mishra
+Tushar Jawane
+Muralidhar Suddhapalli
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-
-//Update 05/04/2024 20:08 by Anurag Mishra
-//Interface has been greatly improved
 
 // Tushar Jawane
 const unsigned char sbox[16][16] = 
@@ -423,16 +431,15 @@ void stringToHex(char txt[], unsigned char hexstr[],int hexstrsize)
 }
 
 //Ayush Gautam
-//
+//For decryption : function recieves the encrypted text and applies all inverse functions in right order
+//                 to decrypt the text given by the user
 void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
 {
-    //Change start on 24 March
+
     int size=strlen(txt)/2; //Size of actual encrypted data to be stored from txt to hexstr
     
     unsigned char hexstr[size+1]; //Extra size for NULL character
     stringToHex(txt,hexstr,size);
-
-    //Change end on 24 March
 
     int blocks=((size%16)?(size/16+1):(size/16));
     unsigned char encrypted_text[blocks][4][4];
@@ -494,6 +501,9 @@ void inverse_Cypher(char *txt,unsigned char roundkeys[][4][4])
     printf("------------------------------------------------------------------------------------------------------------\n");
 }
 
+//Ayush Gautam
+//For encryption : function recieves the simple text and applies all encryption functions in right order
+//                 to encrypt the text given by the user
 void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
 {
     int size=strlen(txt);
@@ -567,6 +577,9 @@ void encrypt_cypher(char *txt,unsigned char roundkeys[][4][4])
     printf("------------------------------------------------------------------------------------------------------------\n");
 }
 
+
+//Ayush Gautam
+//For getting string for encryption/decryption : 
 char *get_string()
 {
     char *str = (char *)malloc(40960 * sizeof(char));
