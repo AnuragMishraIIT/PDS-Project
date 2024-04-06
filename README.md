@@ -32,7 +32,6 @@ Follow these steps
 
 ### For encryption
 1. Run the program.
-2. 
 3. Click Encryption button.
 4. Enter required fields and press Enter.
 ### For decryption
@@ -43,7 +42,7 @@ Follow these steps
 
 ## Contributing
 All useful contributions are heartily accepted to make the project better.
-Follow these steps for making a contribution
+Follow these steps for making a contribution:
 1. Fork the repository.
 2. Create a new branch.
 3. Make your changes.
@@ -51,6 +50,9 @@ Follow these steps for making a contribution
    
 
 ## Acknowledgements
-
+Anurag Mishra
+Ayush Gautam
+Tushar Jawane
+Muralidhar Suddhapalli
 
 
